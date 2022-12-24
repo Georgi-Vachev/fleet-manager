@@ -1,0 +1,22 @@
+{
+  "name": "fleet-manager",
+  "version": "1.0.0",
+  "description": "Use the provided HTML and CSS examples to implement a browser application for managing the fleet of a vehicle rental company. The company rents out passenger cars and cargo trucks. The user interface must provide and overview of all registered vehicles. In addition, each vehicle type has a dedicated browser with the option to create a new vehicle of the type and edit or delete an existing vehicle. When viewing the details for a vehicle, options are presented to rent it to a person, or to mark the rent contract as completed.",
+  "main": "index.js",
+  "scripts": {
+    "watch": "webpack --watch",
+    "start": "webpack serve --open",
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ts-loader": "^9.4.1",
+    "webpack": "^5.75.0"
+  },
+  "devDependencies": {
+    "webpack-cli": "^5.0.0",
+    "webpack-dev-server": "^4.11.1"
+  }
+}
