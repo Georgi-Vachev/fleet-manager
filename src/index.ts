@@ -3,9 +3,9 @@ import { Collection } from "./data/Collection";
 import { LocalStorage } from "./data/Storage";
 
 async function start() {
-    const storage = new LocalStorage();
-    const collection = new Collection(storage, 'cars');
-    const carService = new CarService(collection);
+    // const storage = new LocalStorage();
+    // const collection = new Collection(storage, 'cars');
+    // const carService = new CarService(collection);
 
     // const carData = {
     //     make: 'VW',
@@ -16,9 +16,6 @@ async function start() {
     //     numberOfSeats: 4,
     //     transmission: 'manual'
     // };
-
-    await carService.deleteAll();
-    console.log(await carService.getAll());
 }
 
 start();
