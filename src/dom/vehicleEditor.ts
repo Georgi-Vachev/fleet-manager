@@ -7,6 +7,7 @@ const newSection = document.getElementById('newSection') as HTMLFormElement;
 const editSection = document.getElementById('editSection') as HTMLFormElement;
 const newButton = document.getElementById('newButton') as HTMLButtonElement;
 const newForm = document.getElementById('newForm') as HTMLFormElement;
+const tableBody = document.getElementsByTagName('tbody')[0];
 
 const make = document.getElementsByName('make');
 const model = document.getElementsByName('model');
@@ -21,6 +22,57 @@ export async function setupPage(vehicleType: string, vehicleService: DataService
     newSection.style.display = 'none';
     editSection.style.display = 'none';
 
+    const vehicles: (CarModel | TruckModel | null)[] = await vehicleService.getAll();
+    vehicles.forEach(vehicle => {
+        let tr = document.createElement('tr');
+        let tdId = document.createElement('td')
+        tdId.textContent = vehicle?.id as string;
+        tr.appendChild(tdId);
+        const tdMake = document.createElement('td')
+        tdMake.textContent = vehicle?.make as string;
+        tr.appendChild(tdMake);
+        const tdModel = document.createElement('td')
+        tdModel.textContent = vehicle?.model as string;
+        tr.appendChild(tdModel);
+
+        if (vehicleType == 'cars') {
+            const tdBodyType = document.createElement('td')
+            tdBodyType.textContent = (vehicle as CarModel).bodyType[0].toUpperCase() + (vehicle as CarModel).bodyType.slice(1) as string;
+            tr.appendChild(tdBodyType);
+            const tdSeats = document.createElement('td')
+            tdSeats.textContent = (vehicle as CarModel).numberOfSeats as unknown as string;
+            tr.appendChild(tdSeats);
+            const tdTransmission = document.createElement('td')
+            tdTransmission.textContent = (vehicle as CarModel).transmission[0].toUpperCase() + (vehicle as CarModel).transmission.slice(1) as string;
+            tr.appendChild(tdTransmission);
+        } else if (vehicleType == 'trucks') {
+            const tdCargo = document.createElement('td')
+            if ((vehicle as TruckModel).cargoType == 'box') {
+                tdCargo.textContent = 'Box truck';
+            } else {
+                tdCargo.textContent = (vehicle as TruckModel).cargoType[0].toUpperCase() + (vehicle as TruckModel).cargoType.slice(1) as string;
+            }
+
+            tr.appendChild(tdCargo);
+            const tdSeats = document.createElement('td')
+            tdSeats.textContent = `${(vehicle as TruckModel).capacity} tons` as unknown as string;
+            tr.appendChild(tdSeats);
+        }
+        const tdRentalPrice = document.createElement('td')
+        tdRentalPrice.textContent = `$${(vehicle as TruckModel).rentalPrice}/day` as unknown as string;
+        tr.appendChild(tdRentalPrice);
+        const tdBtn = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.classList.add('action', 'edit');
+        editBtn.textContent = 'Edit';
+        const delBtn = document.createElement('button');
+        delBtn.classList.add('action', 'delete');
+        delBtn.textContent = 'Delete';
+        tdBtn.appendChild(editBtn);
+        tdBtn.appendChild(delBtn);
+        tr.appendChild(tdBtn);
+        tableBody.appendChild(tr);
+    })
     // show/hide new record form on new car button click
     newButton.addEventListener('click', () => {
         if (newSection.style.display == 'none') {
@@ -52,7 +104,6 @@ export async function setupPage(vehicleType: string, vehicleService: DataService
         })
     })
 
-
     document.getElementById('addVehicle')?.addEventListener('click', async (event) => {
         event.preventDefault();
         let vehicleData: CarData | TruckData = {} as CarData | TruckData;
@@ -82,7 +133,5 @@ export async function setupPage(vehicleType: string, vehicleService: DataService
         newForm.reset();
         console.log(await vehicleService.getAll())
     })
-
-    const vehicles: (CarModel | TruckModel | null)[] = await vehicleService.getAll();
-    vehicles.forEach(v => console.log(v))
 }
+
