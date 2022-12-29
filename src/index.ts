@@ -25,7 +25,6 @@ vehicleType.addEventListener('change', () => {
     vehiclesShown = vehicleType.value;
 });
 
-
 async function populateTable() {
 
     if (vehiclesShown == 'all' || vehiclesShown == 'cars') {
@@ -57,7 +56,7 @@ async function populateTable() {
                 const detailsLink = document.createElement('a');
                 detailsLink.textContent = 'Show Details';
                 detailsLink.className = 'details-link';
-                detailsLink.href = `/details.html?id=${car?.id}`;
+                detailsLink.href = `/details.html?id=${car?.id}&type=cars`;
                 tdDetails.appendChild(detailsLink);
                 tr.appendChild(tdDetails);
                 tableBody.appendChild(tr);
@@ -94,7 +93,7 @@ async function populateTable() {
                 const detailsLink = document.createElement('a');
                 detailsLink.textContent = 'Show Details';
                 detailsLink.className = 'details-link';
-                detailsLink.href = `/details.html?id=${truck?.id}`;
+                detailsLink.href = `/details.html?id=${truck?.id}&type=trucks`;
                 tdDetails.appendChild(detailsLink);
                 tr.appendChild(tdDetails);
                 tableBody.appendChild(tr);
