@@ -6,6 +6,7 @@ import { CarModel, TruckModel } from "../data/VehicleModels";
 const newSection = document.getElementById('newSection') as HTMLFormElement;
 const editSection = document.getElementById('editSection') as HTMLFormElement;
 const newButton = document.getElementById('newButton') as HTMLButtonElement;
+
 const newForm = document.getElementById('newForm') as HTMLFormElement;
 const tableBody = document.getElementsByTagName('tbody')[0];
 
@@ -17,11 +18,96 @@ const transmission = document.getElementsByName('transmission');
 const rentalPrice = document.getElementsByName('rentalPrice');
 const cargoType = document.getElementsByName('cargoType');
 const capacity = document.getElementsByName('capacity');
+const saveButton = document.getElementById('saveVehicle');
 
-export async function setupPage(vehicleType: string, vehicleService: DataService<CarModel | TruckModel, CarData | TruckData>) {
+let vehicleId: string = '';
+let vehicleType: string = '';
+let vehicleService: DataService<CarModel | TruckModel, CarData | TruckData>;
+
+export async function setupPage(setVehicleType: string, setVehicleService: DataService<CarModel | TruckModel, CarData | TruckData>) {
     newSection.style.display = 'none';
     editSection.style.display = 'none';
+    vehicleType = setVehicleType;
+    vehicleService = setVehicleService;
 
+    await populateTable();
+
+    // show/hide new record form on new car button click
+    newButton.addEventListener('click', () => {
+        if (newSection.style.display == 'none') {
+            newSection.style.display = 'block';
+            editSection.style.display = 'none';
+        } else {
+            newSection.style.display = 'none';
+        }
+    });
+
+    // when edit button is clicked, populate edit form with row info (modify if new type of vehicle or another column is added)
+
+    addNewVehicle();
+
+    (saveButton as HTMLButtonElement).addEventListener('click', async (event) => {
+        event.preventDefault();
+        let vehicleData: CarData | TruckData = {} as CarData | TruckData;
+        if (vehicleType == 'cars') {
+            vehicleData = {
+                make: (make[1] as HTMLInputElement).value,
+                model: (model[1] as HTMLInputElement).value,
+                rentalPrice: Number((rentalPrice[1] as HTMLInputElement).value),
+                rentedTo: '',
+                bodyType: (bodyType[1] as HTMLSelectElement).value,
+                numberOfSeats: Number((numberOfSeats[1] as HTMLSelectElement).value),
+                transmission: (transmission[1] as HTMLSelectElement).value
+            };
+        } else if (vehicleType == 'trucks') {
+            vehicleData = {
+                make: (make[1] as HTMLInputElement).value,
+                model: (model[1] as HTMLInputElement).value,
+                rentalPrice: Number((rentalPrice[1] as HTMLInputElement).value),
+                rentedTo: '',
+                cargoType: (cargoType[1] as HTMLSelectElement).value as 'box' | 'flatbed' | 'van',
+                capacity: Number((capacity[1] as HTMLInputElement).value)
+            };
+        }
+        await vehicleService.update(vehicleId, vehicleData);
+        tableBody.textContent = "";
+        await populateTable();
+    })
+
+}
+
+function addNewVehicle() {
+    document.getElementById('addVehicle')?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        let vehicleData: CarData | TruckData = {} as CarData | TruckData;
+        if (vehicleType == 'cars') {
+            vehicleData = {
+                make: (make[0] as HTMLInputElement).value,
+                model: (model[0] as HTMLInputElement).value,
+                rentalPrice: Number((rentalPrice[0] as HTMLInputElement).value),
+                rentedTo: '',
+                bodyType: (bodyType[0] as HTMLSelectElement).value,
+                numberOfSeats: Number((numberOfSeats[0] as HTMLSelectElement).value),
+                transmission: (transmission[0] as HTMLSelectElement).value
+            };
+        } else if (vehicleType == 'trucks') {
+            vehicleData = {
+                make: (make[0] as HTMLInputElement).value,
+                model: (model[0] as HTMLInputElement).value,
+                rentalPrice: Number((rentalPrice[0] as HTMLInputElement).value),
+                rentedTo: '',
+                cargoType: (cargoType[0] as HTMLSelectElement).value as 'box' | 'flatbed' | 'van',
+                capacity: Number((capacity[0] as HTMLInputElement).value)
+            };
+        }
+        await vehicleService.create(vehicleData);
+        newForm.reset();
+        tableBody.textContent = "";
+        await populateTable();
+    })
+}
+
+async function populateTable() {
     const vehicles: (CarModel | TruckModel | null)[] = await vehicleService.getAll();
     vehicles.forEach(vehicle => {
         let tr = document.createElement('tr');
@@ -52,7 +138,6 @@ export async function setupPage(vehicleType: string, vehicleService: DataService
             } else {
                 tdCargo.textContent = (vehicle as TruckModel).cargoType[0].toUpperCase() + (vehicle as TruckModel).cargoType.slice(1) as string;
             }
-
             tr.appendChild(tdCargo);
             const tdSeats = document.createElement('td')
             tdSeats.textContent = `${(vehicle as TruckModel).capacity} tons` as unknown as string;
@@ -65,30 +150,10 @@ export async function setupPage(vehicleType: string, vehicleService: DataService
         const editBtn = document.createElement('button');
         editBtn.classList.add('action', 'edit');
         editBtn.textContent = 'Edit';
-        const delBtn = document.createElement('button');
-        delBtn.classList.add('action', 'delete');
-        delBtn.textContent = 'Delete';
-        tdBtn.appendChild(editBtn);
-        tdBtn.appendChild(delBtn);
-        tr.appendChild(tdBtn);
-        tableBody.appendChild(tr);
-    })
-    // show/hide new record form on new car button click
-    newButton.addEventListener('click', () => {
-        if (newSection.style.display == 'none') {
-            newSection.style.display = 'block';
-            editSection.style.display = 'none';
-        } else {
-            newSection.style.display = 'none';
-        }
-    });
-
-    // when edit button is clicked, populate edit form with row info (modify if new type of vehicle or another column is added)
-    [...document.getElementsByClassName('edit')].forEach(button => {
-        button.addEventListener('click', () => {
+        editBtn.addEventListener('click', () => {
             editSection.style.display = 'block';
             newSection.style.display = 'none';
-            const rowInfo = button.parentElement?.parentElement as HTMLElement;
+            const rowInfo = editBtn.parentElement?.parentElement as HTMLElement;
             (make[1] as HTMLInputElement).value = rowInfo.children[1].textContent as string;
             (model[1] as HTMLInputElement).value = rowInfo.children[2].textContent as string;
             if (vehicleType == 'cars') {
@@ -101,37 +166,23 @@ export async function setupPage(vehicleType: string, vehicleService: DataService
                 (capacity[1] as HTMLInputElement).value = (rowInfo.children[4].textContent?.match(/(\d+)\.?(\d+)?/) as Array<any>)[0] as string;
                 (rentalPrice[1] as HTMLInputElement).value = (rowInfo.children[5].textContent?.match(/(\d+)/) as Array<any>)[0] as string;
             }
+            vehicleId = rowInfo.children[0].textContent as string;
         })
-    })
-
-    document.getElementById('addVehicle')?.addEventListener('click', async (event) => {
-        event.preventDefault();
-        let vehicleData: CarData | TruckData = {} as CarData | TruckData;
-
-        if (vehicleType == 'cars') {
-            vehicleData = {
-                make: (make[0] as HTMLInputElement).value,
-                model: (model[0] as HTMLInputElement).value,
-                rentalPrice: Number((rentalPrice[0] as HTMLInputElement).value),
-                rentedTo: 'Georgi Vachev',
-                bodyType: (bodyType[0] as HTMLSelectElement).value,
-                numberOfSeats: Number((numberOfSeats[0] as HTMLSelectElement).value),
-                transmission: (transmission[0] as HTMLSelectElement).value
-            };
-        } else if (vehicleType == 'trucks') {
-            vehicleData = {
-                make: (make[0] as HTMLInputElement).value,
-                model: (model[0] as HTMLInputElement).value,
-                rentalPrice: Number((rentalPrice[0] as HTMLInputElement).value),
-                rentedTo: 'Georgi Vachev',
-                cargoType: (cargoType[0] as HTMLSelectElement).value as 'box' | 'flatbed' | 'van',
-                capacity: Number((capacity[0] as HTMLInputElement).value)
-            };
-        }
-        console.log(vehicleData)
-        await vehicleService.create(vehicleData);
-        newForm.reset();
-        console.log(await vehicleService.getAll())
+        const delBtn = document.createElement('button');
+        delBtn.classList.add('action', 'delete');
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', async () => {
+            const rowInfo = delBtn.parentElement?.parentElement as HTMLElement;
+            await vehicleService.delete(rowInfo.children[0].textContent as string);
+            tableBody.textContent = "";
+            await populateTable();
+        })
+        tdBtn.appendChild(editBtn);
+        tdBtn.appendChild(delBtn);
+        tr.appendChild(tdBtn);
+        tableBody.appendChild(tr);
     })
 }
+
+
 
